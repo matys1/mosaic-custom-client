@@ -1,0 +1,1 @@
+run `npm run dev` and go to `http://localhost:5173/`

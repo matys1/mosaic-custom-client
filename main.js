@@ -1,4 +1,4 @@
-import { wasmConnector, coordinator, MosaicClient, Selection, interval } from "@uwdata/mosaic-core";
+import { wasmConnector, coordinator, MosaicClient, Selection, clauseInterval, Param } from "@uwdata/mosaic-core";
 import { Query, count } from "@uwdata/mosaic-sql";
 import testData from "./data.js";
 
@@ -57,6 +57,7 @@ class CustomClient extends MosaicClient {
 
   queryResult(data) {
     this.data = data.toArray().map((row) => row.toJSON());
+    console.log(this.data);
     return this;
   }
 }
@@ -64,17 +65,18 @@ class CustomClient extends MosaicClient {
 const selection = Selection.crossfilter();
 const client1 = new CustomClient("testData", "HourOfDay", selection);
 const client2 = new CustomClient("testData", "DayOfWeek", selection);
-coord.connect(client1);
-coord.connect(client2);
+await coord.connect(client1);
+await coord.connect(client2);
 
-console.log(selection.predicate(client1)); // => []
-console.log(selection.predicate(client2)); // => []
+const c1 = Param.value(0);
+const c2 = Param.value(24);
+const c3 = Param.value(0);
+const c4 = Param.value(7);
 
-// it seems like below is being attached to class itself not an instance of class
-selection.update(interval("HourOfDay", [0, 24], { source: client1 }));
-console.log(selection.predicate(client1) + ""); // => ("HourOfDay" BETWEEN 0 AND 24)
-console.log(selection.predicate(client2) + ""); // => ("HourOfDay" BETWEEN 0 AND 24)
+selection.update(clauseInterval("HourOfDay", [c1, c2], { source: client1 }));
+selection.update(clauseInterval("DayOfWeek", [c3, c4], { source: client2 }));
 
-selection.update(interval("DayOfWeek", [0, 7], { source: client2 }));
-console.log(selection.predicate(client1) + ""); // => ("HourOfDay" BETWEEN 0 AND 24)
-console.log(selection.predicate(client2) + ""); // => ("HourOfDay" BETWEEN 0 AND 24)
+c1.update(2);
+c2.update(3);
+c3.update(0);
+c4.update(1);

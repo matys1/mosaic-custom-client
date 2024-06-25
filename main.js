@@ -41,10 +41,11 @@ const coord = coordinator();
 coord.databaseConnector(connector);
 
 class CustomClient extends MosaicClient {
-  constructor(tableName, columnName, filterBy) {
+  constructor(tableName, columnName, filterBy, onUpdate) {
     super(filterBy);
     this.tableName = tableName;
     this.columnName = columnName;
+    this.onUpdate = onUpdate;
   }
 
   query(filter = []) {
@@ -57,14 +58,18 @@ class CustomClient extends MosaicClient {
 
   queryResult(data) {
     this.data = data.toArray().map((row) => row.toJSON());
-    console.log(this.data);
+    return this;
+  }
+
+  update() {
+    this.onUpdate(this.data)
     return this;
   }
 }
 
 const selection = Selection.crossfilter();
-const client1 = new CustomClient("testData", "HourOfDay", selection);
-const client2 = new CustomClient("testData", "DayOfWeek", selection);
+const client1 = new CustomClient("testData", "HourOfDay", selection, (data) => console.log(data) /* (data) => comp1.data(data) */ );
+const client2 = new CustomClient("testData", "DayOfWeek", selection, (data) => console.log(data) /* (data) => comp2.data(data) */ );
 await coord.connect(client1);
 await coord.connect(client2);
 
